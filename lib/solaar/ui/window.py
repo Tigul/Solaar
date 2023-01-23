@@ -585,18 +585,11 @@ def _update_details(button):
             _details._text.set_markup(text)
 
         def _make_text(items):
-            text = '\n'.join('%-13s: %s' % (name, value) for name, value in items)
+            text = '\n'.join('%-13s: %s' % i for i in items)
             return '<small><tt>' + text + '</tt></small>'
-
-        def _displayable_items(items):
-            for name, value in items:
-                value = GLib.markup_escape_text(str(value).replace('\x00', '')).strip()
-                if value:
-                    yield name, value
 
         def _read_slow(device):
             items = _details_items(selected_device, True)
-            items = _displayable_items(items)
             text = _make_text(items)
             if device == _details._current_device:
                 GLib.idle_add(_set_details, text)
@@ -623,7 +616,7 @@ def _update_receiver_panel(receiver, panel, buttons, full=False):
     devices_count = len(receiver)
 
     paired_text = _(
-        _('No device paired.')
+        'No device paired.'
     ) if devices_count == 0 else ngettext('%(count)s paired device.', '%(count)s paired devices.', devices_count) % {
         'count': devices_count
     }
@@ -663,9 +656,13 @@ def _update_receiver_panel(receiver, panel, buttons, full=False):
     # b._insecure.set_visible(False)
     buttons._unpair.set_visible(False)
 
-    if not is_pairing and (receiver.remaining_pairings() is None or receiver.remaining_pairings() != 0) and \
-       (receiver.re_pairs or devices_count < receiver.max_devices):
-        buttons._pair.set_sensitive(True)
+    if (receiver.may_unpair or receiver.re_pairs) and not is_pairing and \
+       (receiver.remaining_pairings() is None or receiver.remaining_pairings() != 0):
+        if not receiver.re_pairs and devices_count >= receiver.max_devices:
+            paired_devices = tuple(n for n in range(1, receiver.max_devices + 1) if n in receiver)
+            buttons._pair.set_sensitive(len(paired_devices) < receiver.max_devices)
+        else:
+            buttons._pair.set_sensitive(True)
     else:
         buttons._pair.set_sensitive(False)
 

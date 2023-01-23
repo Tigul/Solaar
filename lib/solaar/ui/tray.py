@@ -217,7 +217,30 @@ try:
             description = '\n'.join(description_lines).rstrip('\n')
 
         # icon_file = _icons.icon_file(icon_name, _TRAY_ICON_SIZE)
-        _icon.set_icon_full(_icon_file(tray_icon_name), description)
+        tray_text = ""
+        for device in _devices_info:
+            if 'Receiver' in device[2]:
+                continue
+            hw_info = device[3]
+            device_name = device[2]
+            device_name = device_name.split(" ")[-1]
+            if 1 in hw_info.keys():
+                tray_text +=  _get_icon_for_device(device_name) + ": " + str(hw_info[1]) + "%" + "  "
+            
+        #_icon.set_icon_full(_icon_file(tray_icon_name), description)
+        _icon.set_label(tray_text, "a")
+        #_icon.set_icon_full("input-mouse", "mouse")
+
+    def _get_icon_for_device(device):
+        if device == "Mouse":
+            #return ""
+            return "🖰"
+        elif device == "Keyboard":
+            return ""
+            #return "⌨"
+        elif device == "Headset":
+            return ""
+            #return "🎧"
 
     def _update_menu_icon(image_widget, icon_name):
         image_widget.set_from_icon_name(icon_name, _MENU_ICON_SIZE)
@@ -434,7 +457,6 @@ def _update_menu_item(index, device):
 
     menu_items = _menu.get_children()
     menu_item = menu_items[index]
-
     level = device.status.get(_K.BATTERY_LEVEL)
     charging = device.status.get(_K.BATTERY_CHARGING)
     icon_name = _icons.battery(level, charging)
@@ -536,3 +558,4 @@ def update(device=None):
             _hide(_icon)
         else:
             _show(_icon)
+
